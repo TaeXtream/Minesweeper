@@ -1,0 +1,189 @@
+type: edu
+custom_name: stage2
+files:
+- name: src/minesweeper/Main.java
+  visible: true
+  text: |
+    package minesweeper;
+
+    public class Main {
+        public static void main(String[] args) {
+            // write your code here
+        }
+    }
+  learner_created: false
+- name: test/MinesweeperTest.java
+  visible: false
+  text: |
+    import org.hyperskill.hstest.stage.StageTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+    import org.hyperskill.hstest.testcase.TestCase;
+    import org.hyperskill.hstest.testing.TestedProgram;
+
+    import java.util.*;
+    import java.util.stream.Collectors;
+
+    public class MinesweeperTest extends StageTest<Integer> {
+        @Override
+        public List<TestCase<Integer>> generate() {
+            List<TestCase<Integer>> tests = new ArrayList<>();
+            for (int i = 1; i <= 50; i++) {
+                int mines = i;
+                TestCase<Integer> test = new TestCase<Integer>()
+                    .setDynamicTesting(() -> {
+                        TestedProgram main = new TestedProgram();
+                        main.start();
+                        String output = main.execute("" + mines);
+                        return test(output, mines);
+                    });
+                tests.add(test);
+                tests.add(test);
+            }
+            return tests;
+        }
+
+        public CheckResult test(String reply, Integer attach) {
+            List<String> lines =
+                Arrays.stream(reply.split("\n"))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+
+            if (lines.isEmpty()) {
+                return CheckResult.wrong(
+                    "Looks like you didn't output a single line!"
+                );
+            }
+
+            if (lines.size() != 9) {
+                return CheckResult.wrong(
+                    "You should output exactly 9 lines of the field. Found: " + lines.size() + "."
+                );
+            }
+
+            int mines = 0;
+
+            for (String line : lines) {
+                if (line.length() != 9) {
+                    return CheckResult.wrong(
+                        "One of the lines of the field doesn't have 9 symbols, " +
+                            "but has " + line.length() + ".\n" +
+                            "This line is \"" + line + "\""
+                    );
+                }
+
+                for (char c : line.toCharArray()) {
+                    if (c != 'X' && c != '.') {
+                        return CheckResult.wrong(
+                            "One of the characters is not equal to either 'X' or '.'.\n" +
+                                "In this line: \"" + line + "\"."
+                        );
+                    }
+                    if (c == 'X') {
+                        mines++;
+                    }
+                }
+            }
+
+            if (attach != mines) {
+                return CheckResult.wrong(
+                    "Expected to see " + attach + " mines, found " + mines
+                );
+            }
+
+            return CheckResult.correct();
+        }
+    }
+  learner_created: false
+- name: src/minesweeper/Board.java
+  visible: true
+  text: |
+    package minesweeper;
+
+    import java.util.*;
+    import java.util.stream.Collectors;
+    import java.util.stream.Stream;
+
+    import static java.util.stream.Collectors.joining;
+    import static java.util.stream.IntStream.rangeClosed;
+
+    public class Board {
+
+        public static final int DEFAULT_SIZE = 9;
+
+        private final int size = DEFAULT_SIZE;
+
+        private final List<Cell> field;
+
+        private final Set<Integer> mines;
+
+        private final String template;
+
+        private static final Random RNG = new Random();
+
+        private final int minesCount;
+
+
+        public Board(int minesCount) {
+            this.minesCount = minesCount;
+            this.mines = new HashSet<>(minesCount);
+            this.template = createTemplate();
+            this.field = new ArrayList<>(Collections.nCopies(size*size, Cell.UNKNOWN));
+            this.placeMine();
+        }
+
+
+        private void placeMine() {
+            int placeCount = 0;
+            while (placeCount != minesCount) {
+                int p = RNG.nextInt(size*size);
+                if (field.get(p).equals(Cell.UNKNOWN)) {
+                    field.set(p, Cell.MINE);
+                    placeCount += 1;
+                }
+            }
+        }
+
+
+        @Override
+        public String toString() {
+            return String.format(template, field.toArray());
+        }
+
+
+        private String createTemplate() {
+            return ""
+    //                + " │123456789│%n"
+    //                + "—│—————————│%n"
+                    + rangeClosed(1, size).mapToObj(row -> "%s%s%s%s%s%s%s%s%s%n").collect(joining());
+                    //+ "—│—————————│";
+        }
+    }
+  learner_created: true
+- name: src/minesweeper/Cell.java
+  visible: true
+  text: |
+    package minesweeper;
+
+    enum Cell {
+        UNKNOWN('.'),
+        MINE('X');
+
+        private final char symbol;
+
+
+        Cell(final char symbol) {
+            this.symbol = symbol;
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf(symbol);
+        }
+    }
+  learner_created: true
+feedback_link: https://hyperskill.org/learn/step/7201#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Fri, 22 Apr 2022 13:01:28 UTC
+record: 2
